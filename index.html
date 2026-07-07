@@ -20,7 +20,6 @@
 
   /* ---------- HOME ---------- */
   .logo { text-align:center; padding-top:24px; }
-  .logo .piri { font-size:20px; }
   h1 { font-size:34px; font-weight:800; color:#2b2440; line-height:1.05; text-align:center; margin-top:6px;}
   .subtitle { text-align:center; font-size:17px; color:#5a4f78; margin:8px 20px 24px; }
   .player-card {
@@ -46,10 +45,11 @@
   .tip-home { text-align:center; font-size:14px; color:#6b5f8d; margin-top:22px; padding:0 24px; }
 
   /* ---------- MAP ---------- */
-  .map-head { display:flex; align-items:center; justify-content:space-between; padding:8px 4px 4px; }
+  .map-head { display:flex; align-items:center; justify-content:space-between; padding:8px 4px 4px; flex-wrap:wrap; gap:6px; }
   .map-head .who { display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px; }
   .map-head .who .av { font-size:30px; }
   .badge { background:#fff; border-radius:999px; padding:6px 14px; font-weight:800; font-size:15px; box-shadow:0 3px 0 rgba(0,0,0,.08); }
+  .diff-btn { border:none; cursor:pointer; font-family:inherit; }
   .switch-btn { background:none; border:none; font-family:inherit; font-size:14px; color:#5a4f78; text-decoration:underline; cursor:pointer; padding:6px; }
   .map-title { text-align:center; font-size:20px; font-weight:800; margin:10px 0 4px; color:#2b2440; }
   .map-sub { text-align:center; font-size:14px; color:#6b5f8d; margin-bottom:14px; }
@@ -90,13 +90,13 @@
   .ex-box { background:#fff; border-radius:26px; padding:22px 18px; box-shadow:0 8px 0 rgba(0,0,0,.08); }
   .ex-instr { font-size:15px; color:#8a7fa8; text-align:center; margin-bottom:4px; cursor:pointer; }
   .ex-instr::after { content:" 🔉"; font-size:13px; }
-  .ex-prompt { text-align:center; font-size:24px; font-weight:800; margin:6px 0 4px; color:#2b2440; }
   .big-audio {
     display:block; margin:14px auto; background:#1cb0f6; color:#fff; border:none;
     border-radius:24px; font-size:44px; width:110px; height:90px; cursor:pointer;
     box-shadow:0 6px 0 #1899d6; font-family:inherit; transition:transform .1s;
   }
   .big-audio:active { transform:translateY(3px); box-shadow:0 3px 0 #1899d6; }
+  .big-emoji { text-align:center; font-size:80px; margin:8px 0; }
 
   .npc-row { display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
   .npc-av { font-size:44px; flex-shrink:0; }
@@ -110,6 +110,7 @@
 
   .opts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
   .opts.wide { grid-template-columns:1fr; }
+  .opts.hard .ow { display:none; }
   .opt {
     background:#fff; border:3px solid #e2dcf2; border-radius:20px; padding:14px 10px;
     text-align:center; cursor:pointer; position:relative; transition:transform .1s;
@@ -118,6 +119,7 @@
   .opt:active { transform:scale(.97); }
   .opt .oe { font-size:46px; display:block; }
   .opt .ow { font-size:16px; font-weight:700; color:#5a4f78; display:block; margin-top:4px; }
+  .opt .ow.solo { font-size:22px; margin-top:0; padding:8px 0; }
   .opt .spk {
     position:absolute; top:6px; right:8px; font-size:16px; background:#eef7ff;
     border-radius:999px; padding:4px 7px; border:none; cursor:pointer; font-family:inherit;
@@ -169,14 +171,10 @@
   .fact-card .ft::after { content:" 🔉 (tik om voor te lezen)"; font-weight:500; font-size:13px; }
   .fact-card .fb { font-size:17px; line-height:1.45; color:#5a4a2e; }
 
-  /* piri mascot */
   .piri-svg { display:block; margin:0 auto; }
 
-  /* confetti */
   .confetti { position:fixed; top:-20px; font-size:24px; animation:fall linear forwards; z-index:999; pointer-events:none; }
   @keyframes fall { to { transform:translateY(110vh) rotate(720deg); } }
-
-  @media (min-width:500px){ .opts{ grid-template-columns:1fr 1fr; } }
 </style>
 </head>
 <body>
@@ -207,6 +205,7 @@
   <div class="map-head">
     <div class="who"><span class="av" id="map-av"></span><span id="map-name"></span></div>
     <div>
+      <button class="badge diff-btn" id="diff-btn" onclick="cycleDiff()"></button>
       <span class="badge">⭐ <span id="map-xp">0</span> XP</span>
       <button class="switch-btn" onclick="showHome()">wissel</button>
     </div>
@@ -261,12 +260,21 @@ function pickVoice(lang){
   cand.sort((a,b)=>score(b)-score(a));
   return cand[0] || null;
 }
+/* spreektempo per moeilijkheidsgraad: w = los woord, s = zin */
+const RATES = {
+  makkelijk: { w:0.78, s:0.88 },
+  normaal:   { w:0.85, s:0.95 },
+  moeilijk:  { w:0.95, s:1.0 }
+};
+function diffOf(){ return (cur && store[cur] && store[cur].diff) || 'normaal'; }
 function speak(text, lang='en', rate, cb){
   try {
     const clean = String(text).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}]/gu,'').trim();
     if (!clean){ if(cb) cb(); return; }
-    // natuurlijk tempo: zinnen bijna op normale snelheid, losse woorden iets rustiger
-    if (!rate) rate = (lang==='nl') ? 1.0 : (clean.split(/\s+/).length > 2 ? 0.95 : 0.85);
+    if (!rate){
+      if (lang==='nl') rate = 1.0;
+      else { const r = RATES[diffOf()]; rate = clean.split(/\s+/).length > 2 ? r.s : r.w; }
+    }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(clean);
     const v = pickVoice(lang==='nl' ? 'nl' : 'en');
@@ -447,10 +455,12 @@ const LEVELS = [
 
 /* ================= STATE ================= */
 const DEFAULT_PLAYERS = {
-  mans:   { name:'Mans',   age:8,  avatar:'🦁', xp:0, stars:{} },
-  vanthe: { name:'Vanthe', age:10, avatar:'🐉', xp:0, stars:{} }
+  mans:   { name:'Mans',   age:8,  avatar:'🐂', xp:0, stars:{}, diff:'normaal' },
+  vanthe: { name:'Vanthe', age:10, avatar:'🐏', xp:0, stars:{}, diff:'normaal' }
 };
-const AVATARS = ['🦁','🐉','🦖','🐺','🦅','🐼','🦊','🐯'];
+const AVATARS = ['🐂','🐏','🦁','🐉','🦖','🐺','🦅','🐼','🦊','🐯'];
+const DIFFS = ['makkelijk','normaal','moeilijk'];
+const DIFF_ICON = { makkelijk:'🌱', normaal:'🌿', moeilijk:'🔥' };
 let store = loadStore();
 let cur = null;           // current player key
 let lvl = null;           // current level object
@@ -465,7 +475,13 @@ let practice = false, pPool = [], pPhrases = [], pStreak = 0, pCount = 0;
 function loadStore(){
   try {
     const raw = localStorage.getItem('piri-op-reis');
-    if (raw) { const s = JSON.parse(raw); if (s.mans && s.vanthe) return s; }
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s.mans && s.vanthe){
+        ['mans','vanthe'].forEach(k=>{ if(!s[k].diff) s[k].diff = 'normaal'; });
+        return s;
+      }
+    }
   } catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_PLAYERS));
 }
@@ -489,7 +505,7 @@ function showHome(){
       <div class="avatar" data-k="${key}">${p.avatar}</div>
       <div class="info">
         <div class="pname">${p.name}</div>
-        <div class="pxp">⭐ ${p.xp} XP · ${done}/${LEVELS.length} stops</div>
+        <div class="pxp">⭐ ${p.xp} XP · ${done}/${LEVELS.length} stops · ${DIFF_ICON[p.diff]} ${p.diff}</div>
       </div>
       <div class="go">▶️</div>
       <button class="reset-mini" title="Opnieuw beginnen">↺</button>`;
@@ -503,9 +519,9 @@ function showHome(){
     card.querySelector('.reset-mini').addEventListener('click', ev=>{
       ev.stopPropagation();
       if (confirm(p.name + ' opnieuw laten beginnen? Alle sterren en XP worden gewist.')){
-        const av = store[key].avatar;
+        const av = store[key].avatar, df = store[key].diff;
         store[key] = JSON.parse(JSON.stringify(DEFAULT_PLAYERS[key]));
-        store[key].avatar = av;
+        store[key].avatar = av; store[key].diff = df;
         save(); showHome();
       }
     });
@@ -514,11 +530,22 @@ function showHome(){
   }
   show('scr-home');
 }
+function renderDiffBtn(){
+  const p = store[cur];
+  document.getElementById('diff-btn').textContent = DIFF_ICON[p.diff] + ' ' + p.diff;
+}
+function cycleDiff(){
+  const p = store[cur];
+  p.diff = DIFFS[(DIFFS.indexOf(p.diff)+1) % DIFFS.length];
+  save(); renderDiffBtn();
+  speak(p.diff === 'makkelijk' ? 'Rustig aan. Goed zo!' : p.diff === 'normaal' ? 'Gewoon spelen!' : 'Uitdaging! Jij kan dit!','nl');
+}
 function showMap(){
   const p = store[cur];
   document.getElementById('map-av').textContent = p.avatar;
   document.getElementById('map-name').textContent = p.name;
   document.getElementById('map-xp').textContent = p.xp;
+  renderDiffBtn();
   const path = document.getElementById('path');
   path.innerHTML = '';
   let nextFound = false;
@@ -566,34 +593,58 @@ function fill(str){
   const p = store[cur];
   return str.replace('{name}', p.name).replace('{age}', p.age);
 }
+/* woordenschat tot en met level i, zonder dubbele woorden */
+function poolUpTo(i){
+  const seen = {}, pool = [];
+  LEVELS.slice(0, i+1).forEach(L=>{
+    (L.vocab||[]).forEach(v=>{ if(!seen[v.w]){ seen[v.w]=1; pool.push(v); } });
+  });
+  return pool;
+}
 function startLevel(i){
   lvl = LEVELS[i]; lvlIndex = i; practice = false;
-  exQueue = buildLesson(lvl);
+  exQueue = buildLesson(lvl, i);
   exTotal = exQueue.length;
   firstTryOK = 0; sessionXP = 0;
   document.getElementById('lvl-flag').textContent = lvl.flag;
   show('scr-level');
   nextExercise();
 }
-/* les opbouwen: geschreven oefeningen + gegenereerde drills tot ±15 opdrachten (≈10 min) */
+/* les opbouwen: geschreven oefeningen + gegenereerde drills tot ±15 opdrachten (≈10 min)
+   moeilijk: drills mixen ook woorden uit eerdere levels (herhaling!) */
 const LESSON_TARGET = 15;
-function buildLesson(L){
+function buildLesson(L, i){
   const authored = L.ex.slice();
   const drills = [];
-  if (L.vocab && L.vocab.length >= 4){
+  const diff = diffOf();
+  const pool = (diff === 'moeilijk') ? poolUpTo(i) : (L.vocab || []);
+  if (pool.length >= 4){
     while (authored.length + drills.length < LESSON_TARGET){
-      drills.push(Math.random() < 0.7 ? genLP(L.vocab) : genMatch(L.vocab));
+      drills.push(genDrill(pool));
     }
   }
   const rest = authored.slice(1).concat(drills);
   shuffle(rest);
   return [authored[0], ...rest];
 }
+function genDrill(pool){
+  const r = Math.random();
+  if (diffOf() !== 'makkelijk' && r < 0.3) return genWP(pool);
+  if (r < 0.75) return genLP(pool);
+  return genMatch(pool);
+}
 function genLP(pool){
+  const n = diffOf() === 'makkelijk' ? 2 : 3; // aantal afleiders
   const item = pool[Math.floor(Math.random()*pool.length)];
-  const others = shuffle(pool.filter(v => v.w !== item.w && v.e !== item.e)).slice(0,3);
+  const others = shuffle(pool.filter(v => v.w !== item.w && v.e !== item.e)).slice(0, n);
   return { t:'lp', say:item.w, nl:'Luister en tik op het goede plaatje',
            opts: shuffle([{e:item.e, w:item.w, ok:1}, ...others.map(o=>({e:o.e, w:o.w, ok:0}))]) };
+}
+function genWP(pool){
+  const item = pool[Math.floor(Math.random()*pool.length)];
+  const others = shuffle(pool.filter(v => v.w !== item.w && v.e !== item.e)).slice(0, 2);
+  return { t:'wp', e:item.e, answer:item.w, nl:'Wat is dit? Tik op het goede woord',
+           opts: shuffle([{w:item.w, ok:1}, ...others.map(o=>({w:o.w, ok:0}))]) };
 }
 function genMatch(pool){
   const three = shuffle(pool.slice()).slice(0,3);
@@ -602,10 +653,9 @@ function genMatch(pool){
 /* oneindige oefen-toets: alles wat tot en met dit level geleerd is */
 function startPractice(i){
   practice = true; lvl = LEVELS[i]; lvlIndex = i;
-  const seen = {};
-  pPool = []; pPhrases = [];
+  pPool = poolUpTo(i);
+  pPhrases = [];
   LEVELS.slice(0, i+1).forEach(L=>{
-    (L.vocab||[]).forEach(v=>{ if(!seen[v.w]){ seen[v.w]=1; pPool.push(v); } });
     L.ex.forEach(e=>{ if (e.t==='dlg' || e.t==='speak') pPhrases.push(e); });
   });
   sessionXP = 0; pStreak = 0; pCount = 0;
@@ -621,8 +671,9 @@ function nextPractice(){
   answeredThis = false; wrongThis = false;
   const r = Math.random();
   let ex;
-  if (r < 0.45 || pPool.length < 4) ex = genLP(pPool);
-  else if (r < 0.65) ex = genMatch(pPool);
+  if (r < 0.4 || pPool.length < 4) ex = genLP(pPool);
+  else if (r < 0.55 && diffOf() !== 'makkelijk') ex = genWP(pPool);
+  else if (r < 0.75) ex = genMatch(pPool);
   else ex = pPhrases[Math.floor(Math.random()*pPhrases.length)];
   renderEx(ex);
 }
@@ -642,7 +693,8 @@ function nextExercise(){
 function completeEx(){
   if (practice){
     pCount++;
-    if (!wrongThis){ pStreak++; sessionXP += 5; } else { pStreak = 0; sessionXP += 2; }
+    const hard = diffOf() === 'moeilijk';
+    if (!wrongThis){ pStreak++; sessionXP += hard ? 8 : 5; } else { pStreak = 0; sessionXP += hard ? 3 : 2; }
     document.getElementById('pfill').style.width = Math.min(pStreak,10)*10 + '%';
     if (pStreak > 0 && pStreak % 10 === 0){
       confetti();
@@ -651,7 +703,8 @@ function completeEx(){
     setTimeout(nextPractice, 950);
     return;
   }
-  if (!wrongThis){ firstTryOK++; sessionXP += 10; } else { sessionXP += 5; }
+  const hard = diffOf() === 'moeilijk';
+  if (!wrongThis){ firstTryOK++; sessionXP += hard ? 15 : 10; } else { sessionXP += hard ? 8 : 5; }
   exQueue.shift();
   setTimeout(nextExercise, 950);
 }
@@ -692,6 +745,7 @@ function bindNl(el, text){
 
 function renderEx(ex){
   const area = document.getElementById('ex-area');
+  const hardCls = diffOf() === 'moeilijk' ? ' hard' : '';
 
   /* ---- LISTEN & PICK ---- */
   if (ex.t === 'lp'){
@@ -699,7 +753,7 @@ function renderEx(ex){
       <div class="ex-box">
         <div class="ex-instr" id="instr">${ex.nl}</div>
         <button class="big-audio" id="replay">🔊</button>
-        <div class="opts" id="opts"></div>
+        <div class="opts${hardCls}" id="opts"></div>
       </div>`;
     bindNl(document.getElementById('instr'), ex.nl);
     document.getElementById('replay').addEventListener('click', ()=>speak(ex.say,'en'));
@@ -718,6 +772,32 @@ function renderEx(ex){
     });
     bindChips(box);
     setTimeout(()=>speak(ex.say,'en'), 350);
+  }
+
+  /* ---- WAT IS DIT? (zie plaatje, kies het woord) ---- */
+  else if (ex.t === 'wp'){
+    area.innerHTML = `
+      <div class="ex-box">
+        <div class="ex-instr" id="instr">${ex.nl}</div>
+        <div class="big-emoji">${ex.e}</div>
+        <div class="opts wide" id="opts"></div>
+      </div>`;
+    bindNl(document.getElementById('instr'), ex.nl);
+    const opts = shuffle(ex.opts.slice());
+    const box = document.getElementById('opts');
+    opts.forEach(o=>{
+      const d = document.createElement('div');
+      d.className = 'opt';
+      d.innerHTML = `${speakerChip(o.w)}<span class="ow solo">${o.w}</span>`;
+      d.addEventListener('click', ()=>{
+        if (answeredThis) return;
+        if (o.ok){ d.classList.add('correct'); speak(o.w,'en'); onCorrect(o.w); }
+        else { d.classList.add('wrong'); onWrong(ex.answer); setTimeout(()=>d.classList.remove('wrong'),600); }
+      });
+      box.appendChild(d);
+    });
+    bindChips(box);
+    setTimeout(()=>speak('What is this?','en'), 350);
   }
 
   /* ---- DIALOGUE ---- */
@@ -793,7 +873,6 @@ function renderEx(ex){
       });
       return d;
     }
-    // interleave: sounds left column, pics right column
     for (let i=0;i<ex.pairs.length;i++){ grid.appendChild(make(sounds[i])); grid.appendChild(make(pics[i])); }
     function onCorrectMatch(){
       if (answeredThis) return;
@@ -818,14 +897,14 @@ function renderEx(ex){
       </div>`;
     bindNl(document.getElementById('instr'), 'Papegaai-tijd! Luister goed en zeg het hardop na.');
     bindNl(document.getElementById('snl'), nl);
-    document.getElementById('again').addEventListener('click', ()=>speak(phrase,'en',0.88));
+    document.getElementById('again').addEventListener('click', ()=>speak(phrase,'en'));
     document.getElementById('did').addEventListener('click', ()=>{
       if (answeredThis) return;
       answeredThis = true;
       sfxGood(); feedback(true,'✔ Goed gedaan, papegaai! 🦜');
       completeEx();
     });
-    setTimeout(()=>speak(phrase,'en',0.88), 350);
+    setTimeout(()=>speak(phrase,'en'), 350);
   }
 }
 
