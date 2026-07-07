@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Piri op Reis — Engels leren onderweg naar Bosnië</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body {
+    font-family:'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+    background:linear-gradient(180deg,#7ec8f5 0%,#b3e0ff 40%,#ffe9c7 100%);
+    min-height:100vh; color:#3a3050; overflow-x:hidden;
+    user-select:none; -webkit-user-select:none;
+  }
+  .screen { display:none; max-width:640px; margin:0 auto; padding:16px; min-height:100vh; }
+  .screen.active { display:block; }
+
+  /* ---------- HOME ---------- */
+  .logo { text-align:center; padding-top:24px; }
+  .logo .piri { font-size:20px; }
+  h1 { font-size:34px; font-weight:800; color:#2b2440; line-height:1.05; text-align:center; margin-top:6px;}
+  .subtitle { text-align:center; font-size:17px; color:#5a4f78; margin:8px 20px 24px; }
+  .player-card {
+    background:#fff; border-radius:24px; padding:20px; margin:14px 8px;
+    display:flex; align-items:center; gap:16px; cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.08); border:4px solid transparent;
+    transition:transform .1s; position:relative;
+  }
+  .reset-mini {
+    position:absolute; top:8px; right:12px; background:#f1eefa; border:none;
+    border-radius:999px; width:32px; height:32px; font-size:16px; color:#8a7fa8;
+    cursor:pointer; font-family:inherit;
+  }
+  .player-card:active { transform:scale(.97); }
+  .player-card .avatar {
+    font-size:44px; background:#ffefd6; border-radius:18px; width:76px; height:76px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .player-card .info { flex:1; }
+  .player-card .pname { font-size:24px; font-weight:800; }
+  .player-card .pxp { font-size:15px; color:#8a7fa8; }
+  .player-card .go { font-size:28px; }
+  .tip-home { text-align:center; font-size:14px; color:#6b5f8d; margin-top:22px; padding:0 24px; }
+
+  /* ---------- MAP ---------- */
+  .map-head { display:flex; align-items:center; justify-content:space-between; padding:8px 4px 4px; }
+  .map-head .who { display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px; }
+  .map-head .who .av { font-size:30px; }
+  .badge { background:#fff; border-radius:999px; padding:6px 14px; font-weight:800; font-size:15px; box-shadow:0 3px 0 rgba(0,0,0,.08); }
+  .switch-btn { background:none; border:none; font-family:inherit; font-size:14px; color:#5a4f78; text-decoration:underline; cursor:pointer; padding:6px; }
+  .map-title { text-align:center; font-size:20px; font-weight:800; margin:10px 0 4px; color:#2b2440; }
+  .map-sub { text-align:center; font-size:14px; color:#6b5f8d; margin-bottom:14px; }
+  .path { position:relative; padding:10px 0 60px; }
+  .node-row { display:flex; justify-content:center; margin:10px 0; }
+  .node-row.left  { justify-content:flex-start; padding-left:12%; }
+  .node-row.right { justify-content:flex-end; padding-right:12%; }
+  .node {
+    background:#fff; border-radius:22px; padding:14px 18px; width:250px;
+    display:flex; align-items:center; gap:14px; cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.10); border:4px solid transparent;
+    transition:transform .1s; position:relative;
+  }
+  .node:active { transform:scale(.97); }
+  .node.done { border-color:#58cc02; }
+  .node.next { border-color:#ff9600; animation:pulse 1.6s infinite; }
+  .node.locked { opacity:.55; filter:grayscale(.6); cursor:default; }
+  @keyframes pulse { 0%,100%{box-shadow:0 6px 0 rgba(0,0,0,.10);} 50%{box-shadow:0 6px 0 rgba(0,0,0,.10),0 0 0 8px rgba(255,150,0,.18);} }
+  .node .flag { font-size:36px; }
+  .node .nname { font-weight:800; font-size:17px; line-height:1.1; }
+  .node .ndesc { font-size:13px; color:#8a7fa8; }
+  .node .stars { position:absolute; top:-14px; right:12px; font-size:15px; background:#fff; padding:2px 8px; border-radius:999px; box-shadow:0 2px 0 rgba(0,0,0,.1); }
+  .node .prac {
+    position:absolute; bottom:-13px; right:12px; background:#1cb0f6; color:#fff;
+    border:none; border-radius:999px; padding:3px 12px; font-size:13px; font-weight:700;
+    cursor:pointer; font-family:inherit; box-shadow:0 2px 0 #1899d6;
+  }
+  .node .lock { margin-left:auto; font-size:22px; }
+  .dots { text-align:center; color:#ffffffaa; font-size:18px; letter-spacing:6px; line-height:.8; }
+
+  /* ---------- LEVEL ---------- */
+  .lvl-head { display:flex; align-items:center; gap:12px; padding:8px 0 14px; }
+  .close-x { background:#fff; border:none; border-radius:14px; width:44px; height:44px; font-size:20px; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.1); font-family:inherit; }
+  .pbar { flex:1; height:18px; background:#ffffff99; border-radius:999px; overflow:hidden; }
+  .pbar-fill { height:100%; width:0%; background:linear-gradient(90deg,#58cc02,#8ee000); border-radius:999px; transition:width .4s; }
+  .hearts { font-size:18px; }
+
+  .ex-box { background:#fff; border-radius:26px; padding:22px 18px; box-shadow:0 8px 0 rgba(0,0,0,.08); }
+  .ex-instr { font-size:15px; color:#8a7fa8; text-align:center; margin-bottom:4px; cursor:pointer; }
+  .ex-instr::after { content:" 🔉"; font-size:13px; }
+  .ex-prompt { text-align:center; font-size:24px; font-weight:800; margin:6px 0 4px; color:#2b2440; }
+  .big-audio {
+    display:block; margin:14px auto; background:#1cb0f6; color:#fff; border:none;
+    border-radius:24px; font-size:44px; width:110px; height:90px; cursor:pointer;
+    box-shadow:0 6px 0 #1899d6; font-family:inherit; transition:transform .1s;
+  }
+  .big-audio:active { transform:translateY(3px); box-shadow:0 3px 0 #1899d6; }
+
+  .npc-row { display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
+  .npc-av { font-size:44px; flex-shrink:0; }
+  .bubble {
+    background:#eef7ff; border-radius:4px 20px 20px 20px; padding:14px 16px; flex:1; cursor:pointer;
+    border:2px solid #cfe8ff;
+  }
+  .bubble .en { font-size:21px; font-weight:800; color:#1571a8; }
+  .bubble .en::after { content:" 🔊"; font-size:15px; }
+  .bubble .nl { font-size:14px; color:#7d93a8; margin-top:2px; }
+
+  .opts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+  .opts.wide { grid-template-columns:1fr; }
+  .opt {
+    background:#fff; border:3px solid #e2dcf2; border-radius:20px; padding:14px 10px;
+    text-align:center; cursor:pointer; position:relative; transition:transform .1s;
+    box-shadow:0 4px 0 #e2dcf2;
+  }
+  .opt:active { transform:scale(.97); }
+  .opt .oe { font-size:46px; display:block; }
+  .opt .ow { font-size:16px; font-weight:700; color:#5a4f78; display:block; margin-top:4px; }
+  .opt .spk {
+    position:absolute; top:6px; right:8px; font-size:16px; background:#eef7ff;
+    border-radius:999px; padding:4px 7px; border:none; cursor:pointer; font-family:inherit;
+  }
+  .opt.correct { border-color:#58cc02; box-shadow:0 4px 0 #58cc02; background:#ecffdc; }
+  .opt.wrong { border-color:#ff4b4b; box-shadow:0 4px 0 #ff4b4b; background:#ffeded; animation:shake .35s; }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-7px);} 75%{transform:translateX(7px);} }
+
+  .match-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+  .mtile {
+    border:3px solid #e2dcf2; border-radius:18px; padding:16px 8px; text-align:center;
+    font-size:20px; font-weight:700; cursor:pointer; background:#fff; box-shadow:0 4px 0 #e2dcf2;
+    color:#5a4f78;
+  }
+  .mtile .me { font-size:40px; display:block; }
+  .mtile.sel { border-color:#1cb0f6; box-shadow:0 4px 0 #1cb0f6; background:#eef7ff; }
+  .mtile.ok { opacity:.35; pointer-events:none; border-color:#58cc02; box-shadow:none; }
+  .mtile.no { animation:shake .35s; border-color:#ff4b4b; }
+
+  .speak-box { text-align:center; }
+  .speak-box .se { font-size:80px; margin:6px 0; }
+  .speak-box .sp { font-size:28px; font-weight:800; color:#2b2440; }
+  .speak-box .snl { font-size:16px; color:#8a7fa8; margin-top:4px; cursor:pointer; }
+  .speak-box .snl::after { content:" 🔉"; }
+  .btn {
+    display:inline-block; border:none; border-radius:20px; font-family:inherit; font-weight:800;
+    font-size:20px; padding:14px 30px; cursor:pointer; margin:10px 6px 0; transition:transform .1s;
+  }
+  .btn:active { transform:translateY(3px); }
+  .btn-blue { background:#1cb0f6; color:#fff; box-shadow:0 5px 0 #1899d6; }
+  .btn-green { background:#58cc02; color:#fff; box-shadow:0 5px 0 #46a302; }
+  .btn-ghost { background:#f1eefa; color:#5a4f78; box-shadow:0 5px 0 #d9d2ec; }
+
+  .feedback { text-align:center; font-size:22px; font-weight:800; min-height:34px; margin-top:14px; }
+  .feedback.good { color:#58cc02; }
+  .feedback.bad { color:#ff4b4b; }
+
+  /* ---------- LEVEL DONE / FACT ---------- */
+  .done-box { text-align:center; padding-top:30px; }
+  .done-box .big { font-size:80px; }
+  .done-box h2 { font-size:30px; font-weight:800; margin:8px 0; color:#2b2440; }
+  .done-stars { font-size:44px; letter-spacing:6px; margin:6px 0; }
+  .xp-chip { display:inline-block; background:#ffd900; color:#7a6200; font-weight:800; border-radius:999px; padding:8px 20px; font-size:19px; margin:8px 0 18px; box-shadow:0 4px 0 #e0be00; }
+  .fact-card {
+    background:#fff8ec; border:3px dashed #ffb84d; border-radius:24px; padding:20px;
+    margin:10px 4px; text-align:left; cursor:pointer;
+  }
+  .fact-card .ft { font-weight:800; font-size:18px; color:#c47b00; margin-bottom:6px; }
+  .fact-card .ft::after { content:" 🔉 (tik om voor te lezen)"; font-weight:500; font-size:13px; }
+  .fact-card .fb { font-size:17px; line-height:1.45; color:#5a4a2e; }
+
+  /* piri mascot */
+  .piri-svg { display:block; margin:0 auto; }
+
+  /* confetti */
+  .confetti { position:fixed; top:-20px; font-size:24px; animation:fall linear forwards; z-index:999; pointer-events:none; }
+  @keyframes fall { to { transform:translateY(110vh) rotate(720deg); } }
+
+  @media (min-width:500px){ .opts{ grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ============ HOME ============ -->
+<div class="screen active" id="scr-home">
+  <div class="logo">
+    <svg class="piri-svg" width="120" height="100" viewBox="0 0 120 100">
+      <polygon points="60,4 116,96 4,96" fill="#f5a623" stroke="#c47b00" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="60,4 82,40 38,40" fill="#ffd27a"/>
+      <circle cx="48" cy="62" r="6" fill="#3a3050"/>
+      <circle cx="72" cy="62" r="6" fill="#3a3050"/>
+      <circle cx="50" cy="60" r="2" fill="#fff"/>
+      <circle cx="74" cy="60" r="2" fill="#fff"/>
+      <path d="M48 78 Q60 88 72 78" stroke="#3a3050" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="38" cy="72" r="4" fill="#ff8a8a" opacity=".6"/>
+      <circle cx="82" cy="72" r="4" fill="#ff8a8a" opacity=".6"/>
+    </svg>
+  </div>
+  <h1>Piri op Reis 🚗</h1>
+  <p class="subtitle">Leer Engels onderweg naar de piramide van Bosnië — samen met Piri!</p>
+  <div id="player-list"></div>
+  <p class="tip-home">💡 Tip: zet het geluid aan! Piri praat Engels met je. Tik op 🔊 als je iets nog een keer wilt horen.</p>
+</div>
+
+<!-- ============ MAP ============ -->
+<div class="screen" id="scr-map">
+  <div class="map-head">
+    <div class="who"><span class="av" id="map-av"></span><span id="map-name"></span></div>
+    <div>
+      <span class="badge">⭐ <span id="map-xp">0</span> XP</span>
+      <button class="switch-btn" onclick="showHome()">wissel</button>
+    </div>
+  </div>
+  <div class="map-title">🗺️ Jullie reis naar Bosnië</div>
+  <div class="map-sub">Tik op de oranje stop om te spelen — of doe een 🎲 oefen-toets!</div>
+  <div class="path" id="path"></div>
+</div>
+
+<!-- ============ LEVEL ============ -->
+<div class="screen" id="scr-level">
+  <div class="lvl-head">
+    <button class="close-x" onclick="quitLevel()">✕</button>
+    <div class="pbar"><div class="pbar-fill" id="pfill"></div></div>
+    <div class="hearts" id="lvl-flag">🇳🇱</div>
+  </div>
+  <div id="ex-area"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<!-- ============ LEVEL DONE ============ -->
+<div class="screen" id="scr-done">
+  <div class="done-box">
+    <div class="big" id="done-emoji">🎉</div>
+    <h2 id="done-title">Level gehaald!</h2>
+    <div class="done-stars" id="done-stars"></div>
+    <div class="xp-chip">+<span id="done-xp">0</span> XP</div>
+    <div class="fact-card" id="fact-card" onclick="speakFact()">
+      <div class="ft">📖 Reisverhaal</div>
+      <div class="fb" id="fact-text"></div>
+    </div>
+    <button class="btn btn-ghost" onclick="startPractice(lvlIndex)">🎲 Oefen-toets</button>
+    <button class="btn btn-green" onclick="backToMap()">Verder! ➜</button>
+  </div>
+</div>
+
+<script>
+/* ================= AUDIO ================= */
+let voices = [];
+function loadVoices(){ voices = speechSynthesis.getVoices(); }
+loadVoices();
+if (typeof speechSynthesis !== 'undefined') speechSynthesis.onvoiceschanged = loadVoices;
+
+function pickVoice(lang){
+  const cand = voices.filter(v => v.lang && v.lang.toLowerCase().replace('_','-').startsWith(lang));
+  // score: Natural/Neural (Edge) > Google (Chrome) > bekende goede stemmen > online stemmen
+  const score = v =>
+    (/natural|neural|online/i.test(v.name) ? 8 : 0) +
+    (/google/i.test(v.name) ? 6 : 0) +
+    (/samantha|daniel|kate|serena|arthur|libby|sonia|ryan|maisie|fenna|colette|xander/i.test(v.name) ? 3 : 0) +
+    (v.localService === false ? 2 : 0);
+  cand.sort((a,b)=>score(b)-score(a));
+  return cand[0] || null;
+}
+function speak(text, lang='en', rate, cb){
+  try {
+    const clean = String(text).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}]/gu,'').trim();
+    if (!clean){ if(cb) cb(); return; }
+    // natuurlijk tempo: zinnen bijna op normale snelheid, losse woorden iets rustiger
+    if (!rate) rate = (lang==='nl') ? 1.0 : (clean.split(/\s+/).length > 2 ? 0.95 : 0.85);
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(clean);
+    const v = pickVoice(lang==='nl' ? 'nl' : 'en');
+    if (v) u.voice = v;
+    u.lang = v ? v.lang : (lang==='nl'?'nl-NL':'en-GB');
+    u.rate = rate; u.pitch = 1.0;
+    if (cb) u.onend = cb;
+    speechSynthesis.speak(u);
+  } catch(e){ if(cb) cb(); }
+}
+
+/* sound effects via WebAudio */
+let actx;
+function tone(freq, dur, t0=0, type='sine', vol=.25){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, actx.currentTime + t0);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + t0 + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(actx.currentTime + t0); o.stop(actx.currentTime + t0 + dur);
+  }catch(e){}
+}
+function sfxGood(){ tone(660,.12); tone(880,.18,.10); }
+function sfxWin(){ tone(523,.15); tone(659,.15,.12); tone(784,.15,.24); tone(1047,.4,.36); }
+function sfxBad(){ tone(220,.25,0,'square',.12); }
+
+/* ================= DATA ================= */
+const PRAISE = ["Great job!","Super!","Well done!","Awesome!","Fantastic!","You did it!"];
+
+const LEVELS = [
+{ id:'nl', flag:'🇳🇱', name:'Den Bosch', desc:'Hallo zeggen!', side:'left',
+  vocab:[{e:'👋',w:'hello'},{e:'✅',w:'yes'},{e:'❌',w:'no'},{e:'😴',w:'good night'},{e:'🙏',w:'please'},{e:'😊',w:'happy'}],
+  fact:"Vrijdagmiddag, kwart over twee. De schoolbel gaat — maar voor jullie is dit geen gewone vrijdag. De koffers liggen al in de auto. Vandaag begint een reis van bijna 4.000 kilometer, door acht landen, helemaal naar een geheimzinnige berg in Bosnië. Verder dan van hier naar de Sahara-woestijn! Riemen vast, avonturiers... daar gaan we!",
+  ex:[
+    { t:'speak', e:'👋', phrase:'Hello!', nl:'Hallo!' },
+    { t:'lp', say:'Hello', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'👋', w:'Hello', ok:1},{e:'😴', w:'Good night', ok:0},{e:'🍦', w:'Ice cream', ok:0} ]},
+    { t:'dlg', npc:"Hi! What's your name?", npcNl:'Hoi! Hoe heet jij?', av:'🧒', opts:[
+      {e:'🙋', w:'My name is {name}!', ok:1},{e:'🍕', w:'Pizza!', ok:0},{e:'👋', w:'Goodbye!', ok:0} ]},
+    { t:'lp', say:'Yes', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'✅', w:'Yes', ok:1},{e:'❌', w:'No', ok:0} ]},
+    { t:'speak', e:'💬', phrase:"What's your name?", nl:'Hoe heet jij?' },
+    { t:'dlg', npc:'Bye bye!', npcNl:'Doei!', av:'👧', opts:[
+      {e:'👋', w:'Bye!', ok:1},{e:'🥔', w:'Potato!', ok:0} ]}
+  ]},
+{ id:'de', flag:'🇩🇪', name:'Duitsland', desc:'Tellen & leeftijd', side:'right',
+  vocab:[{e:'1️⃣',w:'one'},{e:'2️⃣',w:'two'},{e:'3️⃣',w:'three'},{e:'4️⃣',w:'four'},{e:'5️⃣',w:'five'},{e:'6️⃣',w:'six'},{e:'7️⃣',w:'seven'},{e:'8️⃣',w:'eight'},{e:'9️⃣',w:'nine'},{e:'🔟',w:'ten'},{e:'🎂',w:'birthday'},{e:'🏰',w:'castle'}],
+  fact:"Kijk goed uit het raam in Duitsland: op bijna elke heuvel staat een kasteel. Meer dan twintigduizend! Ooit woonden daar ridders die elkaar berichten stuurden met vuursignalen, van torentop naar torentop. Wie van jullie spot het eerste kasteel? Die mag vanavond kiezen wat we eten... nou ja, bijna dan.",
+  ex:[
+    { t:'lp', say:'Three', nl:'Luister en tik op het goede getal', opts:[
+      {e:'3️⃣', w:'three', ok:1},{e:'1️⃣', w:'one', ok:0},{e:'7️⃣', w:'seven', ok:0} ]},
+    { t:'lp', say:'Seven', nl:'Luister en tik op het goede getal', opts:[
+      {e:'5️⃣', w:'five', ok:0},{e:'7️⃣', w:'seven', ok:1},{e:'2️⃣', w:'two', ok:0},{e:'9️⃣', w:'nine', ok:0} ]},
+    { t:'dlg', npc:'How old are you?', npcNl:'Hoe oud ben jij?', av:'👦', opts:[
+      {e:'🎂', w:'I am {age}!', ok:1},{e:'🍌', w:'I am a banana!', ok:0},{e:'🙏', w:'Thank you!', ok:0} ]},
+    { t:'match', nl:'Zoek de paren: geluid bij getal', pairs:[
+      {e:'2️⃣', w:'two'},{e:'5️⃣', w:'five'},{e:'🔟', w:'ten'} ]},
+    { t:'speak', e:'🎂', phrase:'I am {age} years old.', nl:'Ik ben {age} jaar.' },
+    { t:'lp', say:'Ten', nl:'Luister en tik op het goede getal', opts:[
+      {e:'🔟', w:'ten', ok:1},{e:'4️⃣', w:'four', ok:0},{e:'6️⃣', w:'six', ok:0} ]}
+  ]},
+{ id:'cz', flag:'🇨🇿', name:'Brno · Tsjechië', desc:'Familie & de grot', side:'left',
+  vocab:[{e:'👦',w:'brother'},{e:'👧',w:'sister'},{e:'👩',w:'mom'},{e:'👨',w:'dad'},{e:'🚤',w:'boat'},{e:'🦇',w:'bat'},{e:'🌑',w:'dark'},{e:'💡',w:'light'}],
+  fact:"Diep onder de grond bij Brno stroomt een geheime rivier door een donkere grot. Jullie stappen in een bootje en varen er dwars doorheen, tussen druipstenen die eruitzien als bevroren waterval-monsters. En dan: de Macocha — een gat van 138 meter diep, dieper dan de hoogste kerktoren van Nederland hoog is. Durf jij over de rand te kijken?",
+  ex:[
+    { t:'lp', say:'Brother', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'👦', w:'brother', ok:1},{e:'👧', w:'sister', ok:0},{e:'👩', w:'mom', ok:0} ]},
+    { t:'lp', say:'Boat', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🚤', w:'boat', ok:1},{e:'🚗', w:'car', ok:0},{e:'✈️', w:'airplane', ok:0} ]},
+    { t:'dlg', npc:'Who is that?', npcNl:'Wie is dat?', av:'🧒', opts:[
+      {e:'👦', w:'That is my brother.', ok:1},{e:'🍕', w:'That is a pizza!', ok:0} ]},
+    { t:'match', nl:'Zoek de paren: geluid bij plaatje', pairs:[
+      {e:'👨', w:'dad'},{e:'👩', w:'mom'},{e:'👧', w:'sister'} ]},
+    { t:'speak', e:'🦇', phrase:'Look, a bat!', nl:'Kijk, een vleermuis!' },
+    { t:'lp', say:'Dark', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🌑', w:'dark', ok:1},{e:'☀️', w:'sun', ok:0},{e:'🌈', w:'rainbow', ok:0} ]}
+  ]},
+{ id:'hu', flag:'🇭🇺', name:'Balaton · Hongarije', desc:'Zwemmen!', side:'right',
+  vocab:[{e:'🏊',w:'swim'},{e:'💧',w:'water'},{e:'🤸',w:'jump'},{e:'🏃',w:'run'},{e:'🦆',w:'duck'},{e:'☀️',w:'sun'}],
+  fact:"De Hongaren noemen het Balatonmeer 'de Hongaarse zee' — het is zó groot dat je de overkant bijna niet ziet. Een oude legende vertelt dat er diep onder het meer een reus zit te huilen, en dat zijn tranen het meer gevuld hebben. Maar huil niet mee: het water is ondiep en heerlijk warm. En op de kade wacht langos op je — warm gefrituurd brood. Jammie!",
+  ex:[
+    { t:'lp', say:'Swim', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🏊', w:'swim', ok:1},{e:'🚴', w:'bike', ok:0},{e:'🏃', w:'run', ok:0} ]},
+    { t:'lp', say:'Water', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'💧', w:'water', ok:1},{e:'🔥', w:'fire', ok:0},{e:'🌳', w:'tree', ok:0} ]},
+    { t:'dlg', npc:"Let's swim!", npcNl:'Kom, we gaan zwemmen!', av:'👧', opts:[
+      {e:'🏊', w:'Yes! Come!', ok:1},{e:'🐱', w:'No, I am a cat.', ok:0} ]},
+    { t:'speak', e:'🏊', phrase:'Can you swim?', nl:'Kun jij zwemmen?' },
+    { t:'match', nl:'Zoek de paren: geluid bij plaatje', pairs:[
+      {e:'🏊', w:'swim'},{e:'🤸', w:'jump'},{e:'⛵', w:'boat'} ]},
+    { t:'lp', say:'Jump', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🤸', w:'jump', ok:1},{e:'😴', w:'sleep', ok:0},{e:'🍽️', w:'eat', ok:0} ]}
+  ]},
+{ id:'hr', flag:'🇭🇷', name:'Plitvice · Kroatië', desc:'Kleuren & natuur', side:'left',
+  vocab:[{e:'🔴',w:'red'},{e:'🔵',w:'blue'},{e:'🟢',w:'green'},{e:'🟡',w:'yellow'},{e:'🟣',w:'purple'},{e:'💦',w:'waterfall'},{e:'🐟',w:'fish'},{e:'🌳',w:'tree'}],
+  fact:"Heel lang geleden, zo vertellen de mensen in Kroatië, was dit dal droog en dor. Toen kwam de Zwarte Koningin, een machtige toverkoningin, en zij liet het dagen en dagen regenen — tot er zestien meren ontstonden, aan elkaar geregen met watervallen als een reuzentrap van water. En het gekste is: het water verandert nog steeds van kleur. Blauw, groen, turquoise... alsof de koningin er nog af en toe in roert.",
+  ex:[
+    { t:'lp', say:'Blue', nl:'Luister en tik op de goede kleur', opts:[
+      {e:'🔴', w:'red', ok:0},{e:'🔵', w:'blue', ok:1},{e:'🟢', w:'green', ok:0} ]},
+    { t:'lp', say:'Green', nl:'Luister en tik op de goede kleur', opts:[
+      {e:'🟢', w:'green', ok:1},{e:'🟡', w:'yellow', ok:0},{e:'🟣', w:'purple', ok:0} ]},
+    { t:'lp', say:'Waterfall', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'💦', w:'waterfall', ok:1},{e:'🌵', w:'cactus', ok:0},{e:'🏔️', w:'mountain', ok:0} ]},
+    { t:'dlg', npc:'Look! A fish!', npcNl:'Kijk! Een vis!', av:'🧒', opts:[
+      {e:'🤩', w:'Wow, cool!', ok:1},{e:'😴', w:'Good night!', ok:0} ]},
+    { t:'match', nl:'Zoek de paren: geluid bij kleur', pairs:[
+      {e:'🔴', w:'red'},{e:'🟡', w:'yellow'},{e:'🟢', w:'green'} ]},
+    { t:'speak', e:'🏞️', phrase:'The water is blue and green!', nl:'Het water is blauw en groen!' }
+  ]},
+{ id:'ba1', flag:'🔺', name:'Visoko · Bosnië', desc:'De Piramide-missie!', side:'right',
+  vocab:[{e:'🔺',w:'pyramid'},{e:'⚽',w:'ball'},{e:'🤝',w:'friend'},{e:'⭐',w:'star'},{e:'🕳️',w:'tunnel'},{e:'🎮',w:'play'}],
+  fact:"Daar staat hij dan: de Piramide van de Zon. Het verhaal gaat dat dit de grootste piramide van de hele aarde is — 220 meter hoog, véél groter dan de beroemdste piramide van Egypte. Wie heeft hem gebouwd, duizenden jaren geleden? Sommige mensen vertellen dat de bouwers hulp kregen van de Plejaden — sterrenmensen van de Zeven Zusters, een groepje sterren dat je 's nachts gewoon kunt zien fonkelen! Ze zeggen dat de piramide nog steeds een geheime energiestraal de ruimte in stuurt, als een lichtboodschap naar de sterren. En diep onder de piramide liggen de Ravne-tunnels, waar het altijd precies 13 graden is en de lucht zó zuiver dat je er vanzelf rustig van wordt. Niemand weet het hele geheim... maar jullie gaan er zelf naar binnen. Voel goed — misschien ontdekken jullie iets wat nog niemand weet!",
+  ex:[
+    { t:'lp', say:'Pyramid', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🔺', w:'pyramid', ok:1},{e:'🏰', w:'castle', ok:0},{e:'⛺', w:'tent', ok:0} ]},
+    { t:'dlg', npc:'Hello! Do you want to play?', npcNl:'Hallo! Wil je spelen?', av:'🧒', opts:[
+      {e:'⚽', w:"Yes! Let's play!", ok:1},{e:'🥔', w:'No potato.', ok:0},{e:'😴', w:'Good night.', ok:0} ]},
+    { t:'lp', say:'Ball', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'⚽', w:'ball', ok:1},{e:'🎈', w:'balloon', ok:0},{e:'📕', w:'book', ok:0} ]},
+    { t:'speak', e:'⚽', phrase:'Do you want to play football?', nl:'Wil je voetballen?' },
+    { t:'dlg', npc:'Come! Look at the tunnel!', npcNl:'Kom! Kijk, de tunnel!', av:'👦', opts:[
+      {e:'🏃', w:"Cool! Let's go!", ok:1},{e:'🍦', w:'One ice cream please.', ok:0} ]},
+    { t:'match', nl:'Zoek de paren: geluid bij plaatje', pairs:[
+      {e:'⚽', w:'ball'},{e:'🔺', w:'pyramid'},{e:'🤝', w:'friend'} ]},
+    { t:'speak', e:'🤝', phrase:'You are my friend!', nl:'Jij bent mijn vriend!' }
+  ]},
+{ id:'ba2', flag:'🇧🇦', name:'Sarajevo & Mostar', desc:'Lekkers vragen', side:'left',
+  vocab:[{e:'🍦',w:'ice cream'},{e:'🍞',w:'bread'},{e:'🧃',w:'juice'},{e:'🧀',w:'cheese'},{e:'🍎',w:'apple'},{e:'🍕',w:'pizza'}],
+  fact:"In Mostar staat een eeuwenoude stenen brug, hoog boven een groene rivier. Al meer dan vierhonderd jaar springen de dapperste jongens van de stad ervan af — 24 meter naar beneden, zo hoog als een flat van acht verdiepingen! Pas als je gesprongen hebt, zeggen ze daar, ben je écht een man van Mostar. Kijken mag, springen niet! Daarna: ćevapi eten op de bazaar van Sarajevo — kleine grillworstjes in warm brood. De lekkerste van de hele Balkan.",
+  ex:[
+    { t:'lp', say:'Ice cream', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🍦', w:'ice cream', ok:1},{e:'🍕', w:'pizza', ok:0},{e:'🥦', w:'broccoli', ok:0} ]},
+    { t:'dlg', npc:'Hello! What do you want?', npcNl:'Hallo! Wat wil je?', av:'🧔', opts:[
+      {e:'🍦', w:'Can I have an ice cream, please?', ok:1},{e:'🔟', w:'I am ten!', ok:0} ]},
+    { t:'speak', e:'🙏', phrase:'Thank you!', nl:'Dankjewel!' },
+    { t:'lp', say:'Bread', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🍞', w:'bread', ok:1},{e:'🧀', w:'cheese', ok:0},{e:'🍎', w:'apple', ok:0} ]},
+    { t:'dlg', npc:'Here you are!', npcNl:'Alsjeblieft!', av:'🧔', opts:[
+      {e:'🙏', w:'Thank you!', ok:1},{e:'⚠️', w:'Watch out!', ok:0} ]},
+    { t:'match', nl:'Zoek de paren: geluid bij plaatje', pairs:[
+      {e:'🍦', w:'ice cream'},{e:'🍞', w:'bread'},{e:'🧃', w:'juice'} ]}
+  ]},
+{ id:'si', flag:'🇸🇮', name:'Bled · Slovenië', desc:'Waar kom je vandaan?', side:'right',
+  vocab:[{e:'🏔️',w:'mountain'},{e:'🏝️',w:'island'},{e:'🛶',w:'boat'},{e:'🍰',w:'cake'},{e:'🔔',w:'bell'},{e:'🌸',w:'flower'}],
+  fact:"Midden in het meer van Bled ligt een piepklein toverachtig eiland met een kerkje erop. In dat kerkje hangt een wensklok. De legende zegt: wie zelf naar het eiland roeit en de klok laat luiden, mag een wens doen — en die komt uit. Wat zou jij wensen? Denk er alvast over na tijdens het roeien. En daarna, op de kade: kremšnita, de beroemdste roomtaart van Slovenië. Ook een soort wens die uitkomt.",
+  ex:[
+    { t:'dlg', npc:'Where are you from?', npcNl:'Waar kom jij vandaan?', av:'👧', opts:[
+      {e:'🇳🇱', w:'I am from Holland!', ok:1},{e:'🌙', w:'I am from the moon!', ok:0} ]},
+    { t:'lp', say:'Mountain', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🏔️', w:'mountain', ok:1},{e:'🏖️', w:'beach', ok:0},{e:'🏙️', w:'city', ok:0} ]},
+    { t:'lp', say:'Cake', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🍰', w:'cake', ok:1},{e:'🥕', w:'carrot', ok:0},{e:'🍟', w:'fries', ok:0} ]},
+    { t:'speak', e:'🇳🇱', phrase:'I am from Holland. Where are you from?', nl:'Ik kom uit Nederland. Waar kom jij vandaan?' },
+    { t:'match', nl:'Zoek de paren: geluid bij plaatje', pairs:[
+      {e:'🏔️', w:'mountain'},{e:'🛶', w:'boat'},{e:'🏝️', w:'island'} ]},
+    { t:'dlg', npc:'Do you like the lake?', npcNl:'Vind je het meer mooi?', av:'👦', opts:[
+      {e:'😍', w:'Yes! It is beautiful!', ok:1},{e:'🧦', w:'It is a sock.', ok:0} ]}
+  ]},
+{ id:'at', flag:'🏠', name:'Salzburg → Thuis', desc:'De Vriendjes-missie!', side:'left',
+  vocab:[{e:'🎵',w:'music'},{e:'🚗',w:'car'},{e:'🏠',w:'home'},{e:'👑',w:'king'},{e:'🚶',w:'bye'},{e:'🤝',w:'friend'}],
+  fact:"De laatste stop: Salzburg, de stad van Mozart. Toen hij vijf jaar oud was — jonger dan jullie allebei — schreef hij al zijn eigen muziek, en als kind reisde hij door heel Europa, net als jullie nu. En dan rijden jullie de laatste kilometers naar huis. Bijna 4.000 kilometer, acht landen, een piramide, watervallen, grotten en een wensklok — en jullie kunnen nu Engels praten met kinderen van over de hele wereld. Jullie vertrokken als schoolkinderen... en komen thuis als wereldreizigers. High five!",
+  ex:[
+    { t:'dlg', npc:"Hi! What's your name?", npcNl:'Hoi! Hoe heet jij?', av:'🧒', opts:[
+      {e:'🙋', w:'My name is {name}!', ok:1},{e:'🍕', w:'Pizza!', ok:0} ]},
+    { t:'dlg', npc:'How old are you?', npcNl:'Hoe oud ben je?', av:'🧒', opts:[
+      {e:'🎂', w:'I am {age}!', ok:1},{e:'👋', w:'Bye!', ok:0} ]},
+    { t:'dlg', npc:'Where are you from?', npcNl:'Waar kom je vandaan?', av:'🧒', opts:[
+      {e:'🇳🇱', w:'I am from Holland!', ok:1},{e:'🍰', w:'Cake, please!', ok:0} ]},
+    { t:'dlg', npc:'Do you want to play?', npcNl:'Wil je spelen?', av:'🧒', opts:[
+      {e:'⚽', w:"Yes! Let's play!", ok:1},{e:'🌙', w:'I am from the moon.', ok:0} ]},
+    { t:'lp', say:'Friend', nl:'Luister en tik op het goede plaatje', opts:[
+      {e:'🤝', w:'friend', ok:1},{e:'🥶', w:'cold', ok:0},{e:'🚗', w:'car', ok:0} ]},
+    { t:'speak', e:'👋', phrase:'Bye bye! See you tomorrow!', nl:'Doei! Tot morgen!' }
+  ]}
+];
+
+/* ================= STATE ================= */
+const DEFAULT_PLAYERS = {
+  mans:   { name:'Mans',   age:8,  avatar:'🦁', xp:0, stars:{} },
+  vanthe: { name:'Vanthe', age:10, avatar:'🐉', xp:0, stars:{} }
+};
+const AVATARS = ['🦁','🐉','🦖','🐺','🦅','🐼','🦊','🐯'];
+let store = loadStore();
+let cur = null;           // current player key
+let lvl = null;           // current level object
+let lvlIndex = 0;
+let exQueue = [];         // exercises left
+let exTotal = 0;
+let firstTryOK = 0, answeredThis = false, wrongThis = false;
+let sessionXP = 0;
+// oefen-toets (oneindige modus)
+let practice = false, pPool = [], pPhrases = [], pStreak = 0, pCount = 0;
+
+function loadStore(){
+  try {
+    const raw = localStorage.getItem('piri-op-reis');
+    if (raw) { const s = JSON.parse(raw); if (s.mans && s.vanthe) return s; }
+  } catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_PLAYERS));
+}
+function save(){ try { localStorage.setItem('piri-op-reis', JSON.stringify(store)); } catch(e){} }
+
+/* ================= NAV ================= */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showHome(){
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  for (const key of ['mans','vanthe']){
+    const p = store[key];
+    const done = Object.keys(p.stars).length;
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    card.innerHTML = `
+      <div class="avatar" data-k="${key}">${p.avatar}</div>
+      <div class="info">
+        <div class="pname">${p.name}</div>
+        <div class="pxp">⭐ ${p.xp} XP · ${done}/${LEVELS.length} stops</div>
+      </div>
+      <div class="go">▶️</div>
+      <button class="reset-mini" title="Opnieuw beginnen">↺</button>`;
+    card.querySelector('.avatar').addEventListener('click', ev=>{
+      ev.stopPropagation();
+      const i = AVATARS.indexOf(p.avatar);
+      p.avatar = AVATARS[(i+1) % AVATARS.length];
+      ev.target.textContent = p.avatar;
+      save();
+    });
+    card.querySelector('.reset-mini').addEventListener('click', ev=>{
+      ev.stopPropagation();
+      if (confirm(p.name + ' opnieuw laten beginnen? Alle sterren en XP worden gewist.')){
+        const av = store[key].avatar;
+        store[key] = JSON.parse(JSON.stringify(DEFAULT_PLAYERS[key]));
+        store[key].avatar = av;
+        save(); showHome();
+      }
+    });
+    card.addEventListener('click', ()=>{ cur = key; speak('Hello ' + p.name + '!','en'); showMap(); });
+    list.appendChild(card);
+  }
+  show('scr-home');
+}
+function showMap(){
+  const p = store[cur];
+  document.getElementById('map-av').textContent = p.avatar;
+  document.getElementById('map-name').textContent = p.name;
+  document.getElementById('map-xp').textContent = p.xp;
+  const path = document.getElementById('path');
+  path.innerHTML = '';
+  let nextFound = false;
+  LEVELS.forEach((L,i)=>{
+    const stars = p.stars[L.id];
+    const isDone = stars !== undefined;
+    const unlocked = isDone || !nextFound;
+    let cls = 'locked', extra = '<span class="lock">🔒</span>';
+    if (isDone){ cls='done'; extra=''; }
+    else if (unlocked){ cls='next'; extra=''; nextFound=true; }
+    const row = document.createElement('div');
+    row.className = 'node-row ' + L.side;
+    row.innerHTML = `
+      <div class="node ${cls}" data-i="${i}">
+        ${isDone ? `<span class="stars">${'⭐'.repeat(stars)}</span><button class="prac">🎲 toets</button>` : ''}
+        <span class="flag">${L.flag}</span>
+        <div><div class="nname">${L.name}</div><div class="ndesc">${L.desc}</div></div>
+        ${extra}
+      </div>`;
+    const node = row.querySelector('.node');
+    if (cls !== 'locked') node.addEventListener('click', ()=> startLevel(i));
+    const pb = row.querySelector('.prac');
+    if (pb) pb.addEventListener('click', ev=>{ ev.stopPropagation(); startPractice(i); });
+    path.appendChild(row);
+    if (i < LEVELS.length-1){
+      const d = document.createElement('div');
+      d.className = 'dots'; d.textContent = '• • •';
+      path.appendChild(d);
+    }
+  });
+  show('scr-map');
+}
+function quitLevel(){
+  speechSynthesis.cancel();
+  if (practice){
+    store[cur].xp += sessionXP; save(); practice = false;
+    if (pCount > 0) speak('Good practice! ' + pCount + ' questions!','en');
+  }
+  showMap();
+}
+function backToMap(){ speechSynthesis.cancel(); showMap(); }
+
+/* ================= LEVEL ENGINE ================= */
+function fill(str){
+  const p = store[cur];
+  return str.replace('{name}', p.name).replace('{age}', p.age);
+}
+function startLevel(i){
+  lvl = LEVELS[i]; lvlIndex = i; practice = false;
+  exQueue = buildLesson(lvl);
+  exTotal = exQueue.length;
+  firstTryOK = 0; sessionXP = 0;
+  document.getElementById('lvl-flag').textContent = lvl.flag;
+  show('scr-level');
+  nextExercise();
+}
+/* les opbouwen: geschreven oefeningen + gegenereerde drills tot ±15 opdrachten (≈10 min) */
+const LESSON_TARGET = 15;
+function buildLesson(L){
+  const authored = L.ex.slice();
+  const drills = [];
+  if (L.vocab && L.vocab.length >= 4){
+    while (authored.length + drills.length < LESSON_TARGET){
+      drills.push(Math.random() < 0.7 ? genLP(L.vocab) : genMatch(L.vocab));
+    }
+  }
+  const rest = authored.slice(1).concat(drills);
+  shuffle(rest);
+  return [authored[0], ...rest];
+}
+function genLP(pool){
+  const item = pool[Math.floor(Math.random()*pool.length)];
+  const others = shuffle(pool.filter(v => v.w !== item.w && v.e !== item.e)).slice(0,3);
+  return { t:'lp', say:item.w, nl:'Luister en tik op het goede plaatje',
+           opts: shuffle([{e:item.e, w:item.w, ok:1}, ...others.map(o=>({e:o.e, w:o.w, ok:0}))]) };
+}
+function genMatch(pool){
+  const three = shuffle(pool.slice()).slice(0,3);
+  return { t:'match', nl:'Zoek de paren: geluid bij plaatje', pairs:three };
+}
+/* oneindige oefen-toets: alles wat tot en met dit level geleerd is */
+function startPractice(i){
+  practice = true; lvl = LEVELS[i]; lvlIndex = i;
+  const seen = {};
+  pPool = []; pPhrases = [];
+  LEVELS.slice(0, i+1).forEach(L=>{
+    (L.vocab||[]).forEach(v=>{ if(!seen[v.w]){ seen[v.w]=1; pPool.push(v); } });
+    L.ex.forEach(e=>{ if (e.t==='dlg' || e.t==='speak') pPhrases.push(e); });
+  });
+  sessionXP = 0; pStreak = 0; pCount = 0;
+  document.getElementById('lvl-flag').textContent = '🎲';
+  document.getElementById('pfill').style.width = '0%';
+  show('scr-level');
+  nextPractice();
+}
+function nextPractice(){
+  const f = document.getElementById('feedback');
+  f.textContent = pStreak > 0 ? ('Reeks: ' + pStreak + ' 🔥') : '';
+  f.className = 'feedback';
+  answeredThis = false; wrongThis = false;
+  const r = Math.random();
+  let ex;
+  if (r < 0.45 || pPool.length < 4) ex = genLP(pPool);
+  else if (r < 0.65) ex = genMatch(pPool);
+  else ex = pPhrases[Math.floor(Math.random()*pPhrases.length)];
+  renderEx(ex);
+}
+function updateBar(){
+  const donePct = ((exTotal - exQueue.length) / exTotal) * 100;
+  document.getElementById('pfill').style.width = donePct + '%';
+}
+function nextExercise(){
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  updateBar();
+  if (!exQueue.length){ finishLevel(); return; }
+  answeredThis = false; wrongThis = false;
+  const ex = exQueue[0];
+  renderEx(ex);
+}
+function completeEx(){
+  if (practice){
+    pCount++;
+    if (!wrongThis){ pStreak++; sessionXP += 5; } else { pStreak = 0; sessionXP += 2; }
+    document.getElementById('pfill').style.width = Math.min(pStreak,10)*10 + '%';
+    if (pStreak > 0 && pStreak % 10 === 0){
+      confetti();
+      setTimeout(()=>speak('Ten in a row! Incredible!','en'), 300);
+    }
+    setTimeout(nextPractice, 950);
+    return;
+  }
+  if (!wrongThis){ firstTryOK++; sessionXP += 10; } else { sessionXP += 5; }
+  exQueue.shift();
+  setTimeout(nextExercise, 950);
+}
+function feedback(good, msg){
+  const f = document.getElementById('feedback');
+  f.textContent = msg;
+  f.className = 'feedback ' + (good?'good':'bad');
+}
+function onCorrect(spokenWord){
+  if (answeredThis) return;
+  answeredThis = true;
+  sfxGood();
+  const praise = PRAISE[Math.floor(Math.random()*PRAISE.length)];
+  feedback(true, '✔ ' + praise);
+  const n = practice ? pCount : (exTotal - exQueue.length);
+  if (n % 2 === 0) setTimeout(()=>speak(praise,'en'), 250);
+  completeEx();
+}
+function onWrong(correctWord){
+  wrongThis = true;
+  sfxBad();
+  feedback(false, 'Bijna! Luister nog eens... 🔊');
+  setTimeout(()=>speak(correctWord,'en'), 500);
+}
+
+/* ---------- renderers ---------- */
+function speakerChip(word){
+  return `<button class="spk" data-say="${word.replace(/"/g,'&quot;')}">🔊</button>`;
+}
+function bindChips(root){
+  root.querySelectorAll('.spk').forEach(b=>{
+    b.addEventListener('click', ev=>{ ev.stopPropagation(); speak(b.dataset.say,'en'); });
+  });
+}
+function bindNl(el, text){
+  el.addEventListener('click', ()=> speak(text,'nl'));
+}
+
+function renderEx(ex){
+  const area = document.getElementById('ex-area');
+
+  /* ---- LISTEN & PICK ---- */
+  if (ex.t === 'lp'){
+    area.innerHTML = `
+      <div class="ex-box">
+        <div class="ex-instr" id="instr">${ex.nl}</div>
+        <button class="big-audio" id="replay">🔊</button>
+        <div class="opts" id="opts"></div>
+      </div>`;
+    bindNl(document.getElementById('instr'), ex.nl);
+    document.getElementById('replay').addEventListener('click', ()=>speak(ex.say,'en'));
+    const opts = shuffle(ex.opts.slice());
+    const box = document.getElementById('opts');
+    opts.forEach(o=>{
+      const d = document.createElement('div');
+      d.className = 'opt';
+      d.innerHTML = `${speakerChip(o.w)}<span class="oe">${o.e}</span><span class="ow">${o.w}</span>`;
+      d.addEventListener('click', ()=>{
+        if (answeredThis) return;
+        if (o.ok){ d.classList.add('correct'); onCorrect(o.w); }
+        else { d.classList.add('wrong'); onWrong(ex.say); setTimeout(()=>d.classList.remove('wrong'),600); }
+      });
+      box.appendChild(d);
+    });
+    bindChips(box);
+    setTimeout(()=>speak(ex.say,'en'), 350);
+  }
+
+  /* ---- DIALOGUE ---- */
+  else if (ex.t === 'dlg'){
+    const npcTxt = fill(ex.npc);
+    area.innerHTML = `
+      <div class="ex-box">
+        <div class="ex-instr" id="instr">Wat zeg jij terug? Tik op het goede antwoord</div>
+        <div class="npc-row">
+          <div class="npc-av">${ex.av}</div>
+          <div class="bubble" id="bub">
+            <div class="en">${npcTxt}</div>
+            <div class="nl">${ex.npcNl}</div>
+          </div>
+        </div>
+        <div class="opts wide" id="opts"></div>
+      </div>`;
+    bindNl(document.getElementById('instr'), 'Wat zeg jij terug? Tik op het goede antwoord.');
+    document.getElementById('bub').addEventListener('click', ()=>speak(npcTxt,'en'));
+    const opts = shuffle(ex.opts.slice());
+    const box = document.getElementById('opts');
+    opts.forEach(o=>{
+      const w = fill(o.w);
+      const d = document.createElement('div');
+      d.className = 'opt';
+      d.innerHTML = `${speakerChip(w)}<span class="oe">${o.e}</span><span class="ow">${w}</span>`;
+      d.addEventListener('click', ()=>{
+        if (answeredThis) return;
+        if (o.ok){ d.classList.add('correct'); speak(w,'en'); onCorrect(w); }
+        else { d.classList.add('wrong'); onWrong(fill(ex.opts.find(x=>x.ok).w)); setTimeout(()=>d.classList.remove('wrong'),600); }
+      });
+      box.appendChild(d);
+    });
+    bindChips(box);
+    setTimeout(()=>speak(npcTxt,'en'), 350);
+  }
+
+  /* ---- MATCH PAIRS ---- */
+  else if (ex.t === 'match'){
+    area.innerHTML = `
+      <div class="ex-box">
+        <div class="ex-instr" id="instr">${ex.nl}</div>
+        <div class="match-grid" id="mgrid"></div>
+      </div>`;
+    bindNl(document.getElementById('instr'), ex.nl);
+    const grid = document.getElementById('mgrid');
+    const sounds = shuffle(ex.pairs.map(p=>({type:'s', w:p.w})));
+    const pics   = shuffle(ex.pairs.map(p=>({type:'p', w:p.w, e:p.e})));
+    let selS = null, selP = null, left = ex.pairs.length;
+    function make(item){
+      const d = document.createElement('div');
+      d.className = 'mtile';
+      d.innerHTML = item.type==='s' ? `🔊 <div style="font-size:15px">${item.w}</div>` : `<span class="me">${item.e}</span>`;
+      d.addEventListener('click', ()=>{
+        if (d.classList.contains('ok')) return;
+        if (item.type==='s'){ speak(item.w,'en'); if(selS) selS.el.classList.remove('sel'); selS={el:d,w:item.w}; d.classList.add('sel'); }
+        else { if(selP) selP.el.classList.remove('sel'); selP={el:d,w:item.w}; d.classList.add('sel'); }
+        if (selS && selP){
+          if (selS.w === selP.w){
+            sfxGood();
+            selS.el.classList.remove('sel'); selP.el.classList.remove('sel');
+            selS.el.classList.add('ok'); selP.el.classList.add('ok');
+            left--;
+            if (!left){ feedback(true,'✔ Super!'); onCorrectMatch(); }
+          } else {
+            wrongThis = true; sfxBad();
+            selS.el.classList.add('no'); selP.el.classList.add('no');
+            const a=selS.el,b=selP.el;
+            setTimeout(()=>{ a.classList.remove('no','sel'); b.classList.remove('no','sel'); },550);
+          }
+          selS = null; selP = null;
+        }
+      });
+      return d;
+    }
+    // interleave: sounds left column, pics right column
+    for (let i=0;i<ex.pairs.length;i++){ grid.appendChild(make(sounds[i])); grid.appendChild(make(pics[i])); }
+    function onCorrectMatch(){
+      if (answeredThis) return;
+      answeredThis = true;
+      const praise = PRAISE[Math.floor(Math.random()*PRAISE.length)];
+      setTimeout(()=>speak(praise,'en'), 200);
+      completeEx();
+    }
+  }
+
+  /* ---- SPEAK / PARROT ---- */
+  else if (ex.t === 'speak'){
+    const phrase = fill(ex.phrase), nl = fill(ex.nl);
+    area.innerHTML = `
+      <div class="ex-box speak-box">
+        <div class="ex-instr" id="instr">Papegaai-tijd! Luister en zeg het hardop na</div>
+        <div class="se">${ex.e}</div>
+        <div class="sp">${phrase}</div>
+        <div class="snl" id="snl">${nl}</div>
+        <button class="btn btn-blue" id="again">🔊 Nog een keer</button>
+        <button class="btn btn-green" id="did">🎤 Ik heb het gezegd!</button>
+      </div>`;
+    bindNl(document.getElementById('instr'), 'Papegaai-tijd! Luister goed en zeg het hardop na.');
+    bindNl(document.getElementById('snl'), nl);
+    document.getElementById('again').addEventListener('click', ()=>speak(phrase,'en',0.88));
+    document.getElementById('did').addEventListener('click', ()=>{
+      if (answeredThis) return;
+      answeredThis = true;
+      sfxGood(); feedback(true,'✔ Goed gedaan, papegaai! 🦜');
+      completeEx();
+    });
+    setTimeout(()=>speak(phrase,'en',0.88), 350);
+  }
+}
+
+/* ================= FINISH ================= */
+function finishLevel(){
+  const ratio = firstTryOK / exTotal;
+  const stars = ratio >= 0.99 ? 3 : ratio >= 0.6 ? 2 : 1;
+  const p = store[cur];
+  const prev = p.stars[lvl.id] || 0;
+  p.stars[lvl.id] = Math.max(prev, stars);
+  p.xp += sessionXP;
+  save();
+  document.getElementById('done-emoji').textContent = stars===3 ? '🏆' : '🎉';
+  document.getElementById('done-title').textContent = lvl.name + ' gehaald!';
+  document.getElementById('done-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+  document.getElementById('done-xp').textContent = sessionXP;
+  document.getElementById('fact-text').textContent = lvl.fact;
+  show('scr-done');
+  sfxWin(); confetti();
+  setTimeout(()=>speak(stars===3 ? 'Perfect! Three stars! Amazing!' : 'You did it! Well done!','en'), 400);
+}
+function speakFact(){ speak(lvl.fact,'nl'); }
+
+function confetti(){
+  const em = ['🎉','⭐','🎊','✨','🔺','💛'];
+  for (let i=0;i<26;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.textContent = em[Math.floor(Math.random()*em.length)];
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.animationDuration = (2 + Math.random()*2) + 's';
+    c.style.animationDelay = (Math.random()*0.8) + 's';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 5000);
+  }
+}
+
+/* ================= UTIL ================= */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+showHome();
+</script>
+</body>
+</html>
