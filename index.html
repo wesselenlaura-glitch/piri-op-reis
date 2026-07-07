@@ -267,6 +267,11 @@ const RATES = {
   moeilijk:  { w:0.95, s:1.0 }
 };
 function diffOf(){ return (cur && store[cur] && store[cur].diff) || 'normaal'; }
+/* Professionele stemopnames (Chloe) in /audio — de game speelt deze af
+   en valt automatisch terug op de apparaat-stem voor alles zonder opname */
+const AUDIO_FILES = ['hello','what-s-your-name','i-am-8-years-old','i-am-10-years-old','look-a-bat','can-you-swim','the-water-is-blue-and-green','do-you-want-to-play-football','you-are-my-friend','thank-you','i-am-from-holland-where-are-you-from','bye-bye-see-you-tomorrow'];
+let curAudio = null;
+function slugify(t){ return String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
 function speak(text, lang='en', rate, cb){
   try {
     const clean = String(text).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{20E3}]/gu,'').trim();
@@ -276,6 +281,21 @@ function speak(text, lang='en', rate, cb){
       else { const r = RATES[diffOf()]; rate = clean.split(/\s+/).length > 2 ? r.s : r.w; }
     }
     speechSynthesis.cancel();
+    if (curAudio){ curAudio.pause(); curAudio = null; }
+    const slug = slugify(clean);
+    if (lang === 'en' && AUDIO_FILES.indexOf(slug) !== -1){
+      const a = new Audio('audio/' + slug + '.mp3');
+      a.playbackRate = Math.max(0.8, Math.min(rate, 1.05));
+      if (cb) a.onended = cb;
+      curAudio = a;
+      a.play().catch(()=>ttsSpeak(clean, lang, rate, cb));
+      return;
+    }
+    ttsSpeak(clean, lang, rate, cb);
+  } catch(e){ if(cb) cb(); }
+}
+function ttsSpeak(clean, lang, rate, cb){
+  try {
     const u = new SpeechSynthesisUtterance(clean);
     const v = pickVoice(lang==='nl' ? 'nl' : 'en');
     if (v) u.voice = v;
